@@ -51,7 +51,9 @@ else:
                      Refer to the paper for details regarding these networks''')
 
 X_train = X_train.astype('float32')
+X_train = X_train.swapaxes(-1, -2).swapaxes(-3, -2)
 X_test = X_test.astype('float32')
+X_test = X_test.swapaxes(-1, -2).swapaxes(-3, -2)
 X_train /= 255
 X_test /= 255
 
@@ -74,7 +76,7 @@ model.save_weights('x0.h5')
 # let's first find the small-batch solution
 model.fit(X_train, Y_train,
           batch_size=256,
-          nb_epoch=nb_epoch,
+          epochs=nb_epoch,
           validation_data=(X_test, Y_test),
           shuffle=True)
 sb_solution = [p.get_value() for p in model.trainable_weights]
@@ -89,7 +91,7 @@ model.load_weights('x0.h5')
 # now, let's train the large-batch solution
 model.fit(X_train, Y_train,
           batch_size=5000,
-          nb_epoch=nb_epoch,
+          epochs=nb_epoch,
           validation_data=(X_test, Y_test))
 lb_solution = [p.get_value() for p in model.trainable_weights]
 
