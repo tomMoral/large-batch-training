@@ -60,8 +60,10 @@ if __name__ == "__main__":
     # build the network
     if network_choice in ['C1', 'C3']:
         model = network_zoo.shallownet(nb_classes)
+        model_LK = network_zoo.shallownet(nb_classes, lastKernel=True)
     elif network_choice in ['C2', 'C4']:
         model = network_zoo.deepnet(nb_classes)
+        model_LK = network_zoo.deepnet(nb_classes, lastKernel=True)
 
     # let's train the model using Adam
     model.compile(loss='categorical_crossentropy',
@@ -92,6 +94,17 @@ if __name__ == "__main__":
     lb_solution = [l.get_weights() for l in model.layers]
     model.save_weights('xf_lb.h5')
 
+    # Use last kernel for the large batch classifier
+    model_LK.compile(loss='categorical_crossentropy',
+                     optimizer='adam',
+                     metrics=['accuracy'])
+    model_LK.load_weights('xf_lb.h5')
+    model_LK.fit(X_train, Y_train,
+                 batch_size=5000,
+                 epochs=1,
+                 validation_data=(X_test, Y_test))
+    lb_solution[-1] = model_LK.layers[-1].get_weights()
+
     # parametric plot data collection
     # we discretize the interval [-1,2] into 25 pieces
     alpha_range = numpy.linspace(-1, 2, 25)
@@ -111,6 +124,9 @@ if __name__ == "__main__":
                                              batch_size=5000, verbose=0)
         data_for_plotting[i, :] = [train_xent, train_acc, test_xent, test_acc]
         i += 1
+
+    import IPython
+    IPython.embed()
 
     # finally, let's plot the data
     # we plot the XENT loss on the left Y-axis
